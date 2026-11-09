@@ -1,0 +1,7 @@
+dist/
+build/
+_tess/
+*.spec
+*.pyc
+__pycache__/
+*.exe
