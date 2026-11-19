@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.build-venv/
+.venv/
+build/
+dist/
+*.spec
+*.log
+settings.json
+.env
+.env.*
+.vscode/
+.idea/
+tesseract/
+
+ocr-build-*/
