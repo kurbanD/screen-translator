@@ -53,7 +53,8 @@ def check(directory):
     exe = directory / 'tesseract.exe'
     data = directory / 'tessdata'
     version = subprocess.check_output([str(exe), '--version'], cwd=directory, text=True, errors='replace', timeout=30)
-    if not version.splitlines()[0].startswith('tesseract ' + VERSION):
+        actual = version.splitlines()[0].strip().removeprefix('tesseract ').removeprefix('v')
+    if actual not in (VERSION, VERSION + '.20260724'):
         raise RuntimeError('Unexpected Tesseract version: ' + version)
     langs = subprocess.check_output([str(exe), '--list-langs', '--tessdata-dir', str(data)], cwd=directory, text=True, errors='replace', timeout=30)
     missing = set(LANGUAGES) - set(langs.splitlines())
