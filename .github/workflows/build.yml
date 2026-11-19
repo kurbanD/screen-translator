@@ -1,0 +1,67 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - edition: lite
+            filename: ScreenTranslator-Lite.exe
+          - edition: full
+            filename: ScreenTranslator-Full.exe
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements-build.txt
+
+      - name: Build EXE
+        run: python build_windows.py ${{ matrix.edition }}
+
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScreenTranslator-${{ matrix.edition }}-2.0
+          path: dist/${{ matrix.filename }}
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ScreenTranslator-*-2.0
+          path: release
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG"; then
+            gh release upload "$TAG" release/*.exe --clobber
+          else
+            gh release create "$TAG" release/*.exe --title "Screen Translator $TAG" --notes "Lite and Full editions."
+          fi
